@@ -1,14 +1,2 @@
 # VSCode 환경 설정
 .vscode/settings.json
-
-# PintOS 빌드 관련 무시 항목
-src/**/build/
-*.o
-*.bin
-*.dsk
-*.output
-*.errors
-*.result
-*.log
-*.asm
-*.lst
