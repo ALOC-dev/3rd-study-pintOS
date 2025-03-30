@@ -1,0 +1,7 @@
+#!/bin/bash
+export PATH=$PATH:/root/pintos/src/utils
+export PATH=$PATH:/root/pintos/src/threads/build
+export PATH=$PATH:/root/pintos/src/userprog/build
+export PATH=$PATH:/root/pintos/src/filesys/build
+export PATH=$PATH:/root/pintos/src/vm/build
+echo "[+] PintOS environment activated!"
