@@ -86,14 +86,17 @@ timer_elapsed (int64_t then)
 
 /* Sleeps for approximately TICKS timer ticks.  Interrupts must
    be turned on. */
+  // [구현]계속해서 반복문을 돌면서 현재 시간을 확인하고 충분한 시간이 경과할 때까지 thread_yield()를 호출합니다. 
+  //이것을 바꿔봅시다.
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
+  int64_t wakeup_tick = timer_ticks()+ticks;
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+
+  if(timer_elapsed(wakeup_tick)<0)
+    thread_sleep(wakeup_tick);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -167,11 +170,17 @@ timer_print_stats (void)
 }
 
 /* Timer interrupt handler. */
+/*[구현] code to add:
+check sleep list and the global tick. find any threads to wake up,
+move them to the ready list if necessary. update the global tick.
+*/
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+  check_sleep_list(ticks);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

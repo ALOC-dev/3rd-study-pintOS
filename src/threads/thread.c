@@ -24,6 +24,9 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+//구현: sleep_list, the sleep queue data structure.
+static struct list sleep_list;
+
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -49,6 +52,7 @@ struct kernel_thread_frame
 static long long idle_ticks;    /* # of timer ticks spent idle. */
 static long long kernel_ticks;  /* # of timer ticks in kernel threads. */
 static long long user_ticks;    /* # of timer ticks in user programs. */
+static int64_t global_tick=INT64_MAX;     /*[구현] global tick 선언*/ 
 
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
@@ -91,6 +95,8 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
+  //구현: sleep_list 추가
+  list_init (&sleep_list);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */
@@ -295,6 +301,86 @@ thread_exit (void)
   schedule ();
   NOT_REACHED ();
 }
+// 구현: thread_sleep
+/* if the current thread is not idle thread,
+change the state of the caller thread to BLOCKED, store the local tick to wake up,
+update the global tick if necessary, and call schedule() */
+/* When you manipulate thread list, disable interrupt! */
+  //1.sleep queue에 thread를 넣어야함.
+  //2.wakeup()함수를 호출해야함.
+void thread_sleep(int64_t ticks){
+  struct thread *cur=thread_current();
+  enum intr_level old_level;
+
+  ASSERT (!intr_context ());
+  old_level = intr_disable ();
+
+  if(cur!=idle_thread){           //if the current thread is not idle thread
+    cur->wakeup_tick=ticks;          //store the local tick to wake up,
+    cur->status = THREAD_BLOCKED;    //change the state of the caller thread to BLOCKED,
+    list_push_back(&sleep_list,&cur->elem);//sleep list로 푸쉬해야함.
+    if(global_tick>cur->wakeup_tick) //update the global tick if necessary
+      global_tick=cur->wakeup_tick;
+    schedule ();//and call schedule() */
+  }
+  intr_set_level (old_level);
+}
+
+void check_sleep_list(int64_t ticks){
+  if(ticks>=global_tick){ 
+    struct list_elem * e;
+    global_tick=INT64_MAX;
+    for(e=list_begin(&sleep_list);e!=list_end(&sleep_list);){
+      struct list_elem * next=list_next(e);
+      struct thread* t=list_entry(e,struct thread, elem);
+      if(ticks<t->wakeup_tick){
+        if(global_tick>t->wakeup_tick){
+          global_tick=t->wakeup_tick;
+        }
+      }else{
+        wakeup(e,t);
+      }
+      e=next;
+    }
+  }
+}
+
+void wakeup(struct list_elem* e, struct thread* t){
+  list_remove(e);
+  thread_unblock(t);
+}
+
+
+//참고용
+// void
+// thread_yield (void) 
+// {
+//   struct thread *cur = thread_current ();
+//   enum intr_level old_level;
+  
+//   ASSERT (!intr_context ());
+
+//   old_level = intr_disable ();
+//   if (cur != idle_thread) 
+//     list_push_back (&ready_list, &cur->elem);
+//   cur->status = THREAD_READY;
+//   schedule ();
+//   intr_set_level (old_level);
+// }
+
+//참고용2
+// void
+// thread_block (void) 
+// {
+//   ASSERT (!intr_context ());
+//   ASSERT (intr_get_level () == INTR_OFF);
+
+//   thread_current ()->status = THREAD_BLOCKED;
+//   schedule ();
+// }
+
+
+
 
 /* Yields the CPU.  The current thread is not put to sleep and
    may be scheduled again immediately at the scheduler's whim. */
