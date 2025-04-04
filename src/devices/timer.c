@@ -91,12 +91,11 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t wakeup_tick = timer_ticks()+ticks;
+  if (ticks <= 0) return;
 
+  int64_t wakeup_tick = timer_ticks() + ticks;
   ASSERT (intr_get_level () == INTR_ON);
-
-  if(timer_elapsed(wakeup_tick)<0)
-    thread_sleep(wakeup_tick);
+  thread_sleep(wakeup_tick);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
