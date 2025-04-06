@@ -1,6 +1,0 @@
-FAIL
-Kernel panic in run: PANIC at ../../threads/thread.c:266 in thread_current(): assertion `t->status == THREAD_RUNNING' failed.
-Call stack: 0xc0029a86 0x635f6461
-Translation of call stack:
-0xc0029a86: debug_panic (.../../lib/kernel/debug.c:38)
-0x635f6461: (unknown)
